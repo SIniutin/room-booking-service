@@ -1,0 +1,26 @@
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+
+# Local env / secrets
+*.env
+.env
+.env.*
+!.env.example
+
+# Go
+/bin/
+/tmp/
+*.test
+*.out
+coverage.out
+coverage.html
+*.coverprofile
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Load / local artifacts
+load_test

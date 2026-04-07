@@ -1,0 +1,53 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.roomCard {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--rad-lg);
+  padding: 18px 20px;
+  transition: all 0.15s;
+}
+
+.roomCard:hover {
+  border-color: var(--border2);
+  box-shadow: var(--shadow);
+}
+
+.roomName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.roomDesc {
+  font-size: 13px;
+  color: var(--text2);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.roomMeta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.scheduleBtn {
+  cursor: pointer;
+  color: var(--accent-text);
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  font-family: inherit;
+  border-style: solid;
+}
+
+.scheduleBtn:hover {
+  opacity: 0.85;
+}

@@ -1,0 +1,27 @@
+.daysRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.dayBtn {
+  padding: 6px 10px;
+  min-width: 42px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border2);
+  background: var(--bg2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text2);
+  transition: all 0.12s;
+  text-align: center;
+  font-family: inherit;
+}
+
+.dayBtn.on {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}

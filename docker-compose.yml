@@ -1,0 +1,50 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      POSTGRES_DSN: "postgres://postgres:postgres@postgres:5432/booking?sslmode=disable"
+      REDIS_ADDR: "redis:6379"
+      JWT_PRIVATE_KEY_PATH: "/app/secrets/private.pem"
+      JWT_PUBLIC_KEY_PATH: "/app/secrets/public.pem"
+      JWT_TTL: "24h"
+      HTTP_PORT: "8080"
+      HTTP_ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173"
+    volumes:
+      - ./secrets:/app/secrets:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: booking
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

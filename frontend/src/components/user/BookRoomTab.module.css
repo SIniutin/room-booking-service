@@ -1,0 +1,100 @@
+.roomOption {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--rad-lg);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.roomOption:hover {
+  border-color: var(--border2);
+  box-shadow: var(--shadow);
+}
+
+.roomOption.selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.roomOption strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cap {
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.dateInput {
+  padding: 8px 12px;
+  border: 1px solid var(--border2);
+  border-radius: var(--rad);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  width: 200px;
+  transition: border 0.15s;
+}
+
+.dateInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+.slotGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.slot {
+  padding: 10px 14px;
+  border-radius: var(--rad);
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: inherit;
+}
+
+.slot:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent-text);
+}
+
+.slot.slotSelected {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.confToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: var(--rad);
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  cursor: pointer;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  user-select: none;
+}

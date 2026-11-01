@@ -22,7 +22,9 @@ func CacheMiddleware(c cache.Cache, ttl time.Duration) func(http.Handler) http.H
 			if err == nil {
 				w.Header().Set("Content-Type", "application/json")
 				w.Header().Set("X-Cache", "HIT")
-				w.Write([]byte(cached))
+				if _, err := w.Write([]byte(cached)); err != nil {
+					return
+				}
 				return
 			}
 
@@ -30,7 +32,9 @@ func CacheMiddleware(c cache.Cache, ttl time.Duration) func(http.Handler) http.H
 			next.ServeHTTP(rec, r)
 
 			if rec.status == http.StatusOK {
-				c.Set(r.Context(), key, rec.body.String(), ttl)
+				if err := c.Set(r.Context(), key, rec.body.String(), ttl); err != nil {
+					return
+				}
 			}
 		})
 	}

@@ -118,7 +118,8 @@ func TestCacheMiddleware_MissStoresSuccessfulResponse(t *testing.T) {
 		del: func(context.Context, string) error { return nil },
 	}, time.Minute)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"rooms":[]}`))
+		_, err := w.Write([]byte(`{"rooms":[]}`))
+		require.NoError(t, err)
 	}))
 
 	req := httptest.NewRequest(http.MethodGet, "/rooms/list", nil)

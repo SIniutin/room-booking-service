@@ -19,7 +19,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("logger: %v", err)
 	}
-	defer logger.Sync()
+	defer func() {
+		_ = logger.Sync()
+	}()
 
 	a, err := app.New(cfg, logger)
 	if err != nil {

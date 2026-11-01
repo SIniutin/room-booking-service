@@ -28,7 +28,9 @@ func (r *userRepoImpl) Create(ctx context.Context, user d.User, creds d.Credenti
 	if err != nil {
 		return d.User{}, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
 
 	_, err = tx.Exec(ctx,
 		`INSERT INTO users (id, email, role) VALUES ($1, $2, $3)`,

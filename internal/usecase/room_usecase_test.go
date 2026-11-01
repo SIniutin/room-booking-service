@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	d "github.com/internships-backend/test-backend-SIniutin/internal/domain"
-	"github.com/internships-backend/test-backend-SIniutin/internal/usecase"
+	d "github.com/SIniutin/room-booking-service/internal/domain"
+	"github.com/SIniutin/room-booking-service/internal/usecase"
 )
 
 func newRoomUsecase(roomRepo *mockRoomRepo, schedRepo *mockScheduleRepo, slotRepo *mockSlotRepo) usecase.RoomUsecase {

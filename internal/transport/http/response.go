@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/internships-backend/test-backend-SIniutin/internal/dto"
+	"github.com/SIniutin/room-booking-service/internal/dto"
 )
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	d "github.com/internships-backend/test-backend-SIniutin/internal/domain"
+	d "github.com/SIniutin/room-booking-service/internal/domain"
 )
 
 type RoomRepo interface {

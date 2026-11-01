@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	d "github.com/internships-backend/test-backend-SIniutin/internal/domain"
+	d "github.com/SIniutin/room-booking-service/internal/domain"
 )
 
 func TestNewEmail(t *testing.T) {

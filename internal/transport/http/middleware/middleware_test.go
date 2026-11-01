@@ -15,8 +15,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/internships-backend/test-backend-SIniutin/internal/domain"
-	"github.com/internships-backend/test-backend-SIniutin/internal/metrics"
+	"github.com/SIniutin/room-booking-service/internal/domain"
+	"github.com/SIniutin/room-booking-service/internal/metrics"
 )
 
 type testCache struct {

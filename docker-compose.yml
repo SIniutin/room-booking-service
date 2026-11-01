@@ -1,4 +1,14 @@
 services:
+  keys:
+    build:
+      context: .
+      dockerfile: docker/keys/Dockerfile
+    environment:
+      FORCE_REGENERATE: "${FORCE_REGENERATE:-0}"
+    volumes:
+      - jwt_keys:/keys
+    restart: "no"
+
   api:
     build: .
     ports:
@@ -12,8 +22,10 @@ services:
       HTTP_PORT: "8080"
       HTTP_ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173"
     volumes:
-      - ./secrets:/app/secrets:ro
+      - jwt_keys:/app/secrets:ro
     depends_on:
+      keys:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
@@ -48,3 +60,4 @@ services:
 
 volumes:
   postgres_data:
+  jwt_keys:

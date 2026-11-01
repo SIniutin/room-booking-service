@@ -15,11 +15,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	d "github.com/internships-backend/test-backend-SIniutin/internal/domain"
-	"github.com/internships-backend/test-backend-SIniutin/internal/dto"
-	"github.com/internships-backend/test-backend-SIniutin/internal/metrics"
-	m "github.com/internships-backend/test-backend-SIniutin/internal/transport/http/middleware"
-	"github.com/internships-backend/test-backend-SIniutin/internal/usecase"
+	d "github.com/SIniutin/room-booking-service/internal/domain"
+	"github.com/SIniutin/room-booking-service/internal/dto"
+	"github.com/SIniutin/room-booking-service/internal/metrics"
+	m "github.com/SIniutin/room-booking-service/internal/transport/http/middleware"
+	"github.com/SIniutin/room-booking-service/internal/usecase"
 )
 
 type mockBookingUsecase struct {

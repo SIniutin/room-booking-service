@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/SIniutin/room-booking-service/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/internships-backend/test-backend-SIniutin/internal/domain"
 )
 
 func AuthMiddleware(publicKey *rsa.PublicKey) func(http.Handler) http.Handler {

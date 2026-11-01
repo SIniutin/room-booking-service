@@ -9,8 +9,8 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	d "github.com/internships-backend/test-backend-SIniutin/internal/domain"
-	"github.com/internships-backend/test-backend-SIniutin/internal/repository"
+	d "github.com/SIniutin/room-booking-service/internal/domain"
+	"github.com/SIniutin/room-booking-service/internal/repository"
 )
 
 var _ repository.UserRepo = (*userRepoImpl)(nil)

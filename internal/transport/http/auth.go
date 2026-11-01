@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	d "github.com/internships-backend/test-backend-SIniutin/internal/domain"
-	"github.com/internships-backend/test-backend-SIniutin/internal/dto"
+	d "github.com/SIniutin/room-booking-service/internal/domain"
+	"github.com/SIniutin/room-booking-service/internal/dto"
 )
 
 func (h *Handler) dummyLogin(w http.ResponseWriter, r *http.Request) {

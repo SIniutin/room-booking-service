@@ -5,8 +5,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/internships-backend/test-backend-SIniutin/internal/app"
-	"github.com/internships-backend/test-backend-SIniutin/internal/config"
+	"github.com/SIniutin/room-booking-service/internal/app"
+	"github.com/SIniutin/room-booking-service/internal/config"
 )
 
 func main() {

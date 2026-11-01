@@ -1,6 +1,6 @@
 package middleware
 
-import "github.com/internships-backend/test-backend-SIniutin/internal/domain"
+import "github.com/SIniutin/room-booking-service/internal/domain"
 
 type contextKey string
 

@@ -16,11 +16,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 
-	"github.com/internships-backend/test-backend-SIniutin/internal/cache"
-	d "github.com/internships-backend/test-backend-SIniutin/internal/domain"
-	"github.com/internships-backend/test-backend-SIniutin/internal/dto"
-	"github.com/internships-backend/test-backend-SIniutin/internal/metrics"
-	"github.com/internships-backend/test-backend-SIniutin/internal/usecase"
+	"github.com/SIniutin/room-booking-service/internal/cache"
+	d "github.com/SIniutin/room-booking-service/internal/domain"
+	"github.com/SIniutin/room-booking-service/internal/dto"
+	"github.com/SIniutin/room-booking-service/internal/metrics"
+	"github.com/SIniutin/room-booking-service/internal/usecase"
 )
 
 type mockAuthUsecase struct {

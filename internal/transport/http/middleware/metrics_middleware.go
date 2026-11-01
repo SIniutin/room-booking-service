@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/internships-backend/test-backend-SIniutin/internal/metrics"
+	"github.com/SIniutin/room-booking-service/internal/metrics"
 )
 
 func MetricsMiddleware(m *metrics.Metrics) func(http.Handler) http.Handler {

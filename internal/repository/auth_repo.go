@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	d "github.com/internships-backend/test-backend-SIniutin/internal/domain"
+	d "github.com/SIniutin/room-booking-service/internal/domain"
 )
 
 type UserRepo interface {

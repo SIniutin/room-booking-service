@@ -4,9 +4,9 @@ import (
 	"crypto/rsa"
 	"net/http"
 
+	m "github.com/SIniutin/room-booking-service/internal/transport/http/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	m "github.com/internships-backend/test-backend-SIniutin/internal/transport/http/middleware"
 )
 
 func NewRouter(h *Handler, publicKey *rsa.PublicKey, allowedOrigins []string, metricsHandler http.Handler) *chi.Mux {

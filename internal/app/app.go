@@ -20,12 +20,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
-	"github.com/internships-backend/test-backend-SIniutin/internal/cache"
-	"github.com/internships-backend/test-backend-SIniutin/internal/config"
-	"github.com/internships-backend/test-backend-SIniutin/internal/metrics"
-	"github.com/internships-backend/test-backend-SIniutin/internal/repository/pg"
-	chimux "github.com/internships-backend/test-backend-SIniutin/internal/transport/http"
-	"github.com/internships-backend/test-backend-SIniutin/internal/usecase"
+	"github.com/SIniutin/room-booking-service/internal/cache"
+	"github.com/SIniutin/room-booking-service/internal/config"
+	"github.com/SIniutin/room-booking-service/internal/metrics"
+	"github.com/SIniutin/room-booking-service/internal/repository/pg"
+	chimux "github.com/SIniutin/room-booking-service/internal/transport/http"
+	"github.com/SIniutin/room-booking-service/internal/usecase"
 )
 
 type App struct {

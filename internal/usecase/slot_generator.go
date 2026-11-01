@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 
-	d "github.com/internships-backend/test-backend-SIniutin/internal/domain"
-	r "github.com/internships-backend/test-backend-SIniutin/internal/repository"
+	d "github.com/SIniutin/room-booking-service/internal/domain"
+	r "github.com/SIniutin/room-booking-service/internal/repository"
 )
 
 const slotDuration = 30 * time.Minute

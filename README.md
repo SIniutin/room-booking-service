@@ -1,421 +1,150 @@
-# Сервис бронирования переговорок
+# Room Booking Service
 
-Сервис реализует бронирование переговорных комнат с разделением ролей:
+[![CI](https://github.com/SIniutin/room-booking-service/actions/workflows/ci.yml/badge.svg)](https://github.com/SIniutin/room-booking-service/actions/workflows/ci.yml)
+[![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](https://go.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-- `admin` создаёт переговорки и расписания
-- `user` просматривает слоты, создаёт и отменяет брони
+A production-style Go backend for booking meeting rooms. It combines a layered
+architecture with PostgreSQL-enforced booking consistency, Redis caching, JWT
+authentication, Prometheus metrics, graceful shutdown, and unit, integration,
+end-to-end, race, and load tests.
 
-Дополнительно реализованы:
+## Why this project is interesting
 
-- `POST /dummyLogin`
-- `POST /register`
-- `POST /login`
-- Redis cache для горячих GET-эндпоинтов
-- Prometheus metrics
-- Docker Compose
-- unit / integration / E2E tests
+- Concurrent requests cannot create two active bookings for one slot: a partial
+  unique index in PostgreSQL is the final consistency boundary.
+- Hot room and slot reads are cached in Redis with explicit invalidation.
+- Repository and E2E tests run against real PostgreSQL and Redis containers.
+- Slots are pre-generated for a rolling seven-day window to keep reads cheap and
+  preserve stable slot identifiers.
+- CI checks formatting, `go vet`, `golangci-lint`, the race detector, integration
+  tests, E2E tests, and a production build.
 
-## Стек
+## Architecture
 
-- Go
-- PostgreSQL
-- Redis
-- Chi
-- pgx
-- goose
-- testcontainers-go
-- React + Vite frontend
+```mermaid
+flowchart LR
+    Client[Client] --> HTTP[Chi HTTP transport]
+    HTTP --> UC[Use cases]
+    UC --> PG[(PostgreSQL)]
+    HTTP <--> Cache[(Redis cache)]
+    App[Application wiring] --> HTTP
+    App --> UC
+    App --> Metrics[Prometheus /metrics]
+```
 
-## Запуск
+The dependency direction is `transport -> usecase -> domain/repository
+interfaces`; PostgreSQL implementations and application wiring stay at the
+edges. See [architecture decisions](docs/architecture.md) for the reasoning.
+
+## 30-second quick start
+
+Requirements: Docker with Compose and `curl`.
 
 ```bash
 docker compose up --build -d
+curl http://localhost:8080/_info
+curl -s -X POST http://localhost:8080/dummyLogin \
+  -H 'Content-Type: application/json' \
+  -d '{"role":"user"}'
 ```
 
-Backend:
-- `http://localhost:8080`
+The Compose `keys` service generates a fresh RSA development key pair in a
+named volume. No private key is stored in Git. The API is available at
+`http://localhost:8080`; Prometheus metrics are exposed at `/metrics`.
 
-Полезные команды:
+Useful commands:
 
 ```bash
-make up
+make up             # build and start the stack
+make logs           # follow API logs
+make seed           # create development admin and user tokens
+make unit           # unit tests with the race detector
+make integration    # PostgreSQL repository tests
+make e2e            # full API scenarios via Testcontainers
+make rotate-keys    # replace Docker development JWT keys
 make down
-make logs
-make seed
-make test
-make e2e
 ```
 
-## Конфигурация
+## Booking consistency
 
-Основные переменные окружения:
+The database migration defines the invariant directly:
 
-```env
-HTTP_PORT=8080
-HTTP_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173
-POSTGRES_DSN=postgres://postgres:postgres@postgres:5432/booking?sslmode=disable
-REDIS_ADDR=redis:6379
-JWT_PRIVATE_KEY_PATH=/app/secrets/private.pem
-JWT_PUBLIC_KEY_PATH=/app/secrets/public.pem
-JWT_TTL=24h
+```sql
+CREATE UNIQUE INDEX idx_bookings_slot_active
+    ON bookings (slot_id)
+    WHERE status = 'active';
 ```
 
-## Архитектура
-
-Проект разбит на слои:
-
-- `internal/domain`  
-  доменные сущности, value objects, доменные ошибки
-
-- `internal/usecase`  
-  бизнес-логика и основные правила
-
-- `internal/repository/pg`  
-  работа с PostgreSQL
-
-- `internal/transport/http`  
-  HTTP handlers, router, middleware
-
-- `internal/app`  
-  wiring приложения, startup, shutdown, migrations
-
-Такое разделение выбрано для того, чтобы:
-
-- бизнес-правила не зависели от HTTP
-- SQL-детали не протекали в usecase-слой
-- тесты можно было писать отдельно по слоям
-
-## Принятые решения и мотивация
-
-Ниже перечислены основные архитектурные и технические решения, а также причины, почему выбран именно такой подход.
-
-### 1. Генерация слотов заранее на 7 дней
-
-**Решение:**  
-слоты генерируются заранее на ближайшие 7 дней.
-
-**Почему так:**  
-в условии прямо сказано, что в `99.9%` случаев пользователи запрашивают слоты в пределах ближайших 7 дней.  
-Также самый нагруженный эндпоинт — список доступных слотов.  
-Предгенерация позволяет:
-
-- быстро отвечать на запросы списка слотов
-- хранить стабильные `slotId`
-- не вычислять слоты на лету при каждом запросе
-
-**Как реализовано:**  
-
-- при создании расписания слоты сразу создаются на окно `[today, today+7d)`
-- фоновая задача раз в сутки достраивает окно ещё на 1 день
-
-**Альтернатива:**  
-Можно было генерировать слоты на лету при каждом запросе. 
-
-**Почему не выбрал:**  
-это упростило бы хранение, но ухудшило бы latency, усложнило бы кэширование и плохо сочеталось бы с требованием стабильного `slotId`.
-
-### 2. Redis cache для горячих чтений
-
-**Решение:**  
-кэшируются:
-
-- `GET /rooms/list`
-- `GET /rooms/{roomId}/slots/list?date=...`
-
-**Почему так:**  
-самая горячая операция — получение слотов.  
-Даже при относительно небольшом объёме данных Redis здесь полезен, потому что:
-
-- снижает нагрузку на БД
-- делает ответ быстрее и стабильнее
-- хорошо подходит под read-heavy сценарий
-
-**Почему не кэшируем всё подряд:**  
-Решил навесить точечно, только там, где он реально даёт выигрыш.
-Агрессивное кэширование всех запросов здесь как мне кажется только усложнило бы invalidation.
-
-**Инвалидация:**  
-кэш слотов инвалидируется при создании и отмене брони.
-
-### 3. Ограничение “один активный слот — одна активная бронь” на уровне БД
-
-**Решение:**  
-используется partial unique index на активные брони по `slot_id`.
-
-**Почему так:**  
-Такие вещи надёжнее держать в базе, а не только в коде usecase, потому что, защита работает race condition, даже если мы ошибемся в usecase , бд не даст сделать запись
-
-**Альтернатива:**  
-проверять занятость только в приложении перед записью.
-
-**Почему не выбрал:**  
-этого недостаточно при конкурентных запросах.
-
-### 4. UTC как единый формат времени
-
-**Решение:**  
-внутри API и в БД работа ведётся в UTC.
-
-**Почему так:**  
-это прямо соответствует условию задачи и убирает часть проблем с часовыми поясами.
-
-**Дополнительно:**  
-в repository-слое время после чтения нормализуется в UTC, чтобы поведение не зависело от локальной timezone процесса.
-
-### 5. CORS через конфиг
-
-Решил нагенерировать простенький фронт, для этого добавил cors middleware, разрешённые origin задаются через `HTTP_ALLOWED_ORIGINS`.
-
-**Мотивация:**  
-зашивать origin в код неудобно:
-
-- сложно менять окружения
-- неудобно запускать проект с другим фронтом
-- это плохая практика даже для тестового
-
-**Что это даёт:**  
-проект легче запускать как локально, так и в контейнере, без перекомпиляции.
-
-### 6. Явный Prometheus registry
-
-**Решение:**  
-метрики создаются через явный `prometheus.Registry`, а не завязаны только на global default registry.
-
-**Мотивация:**  
-изначально глобальная регистрация мешала тестам и делала поведение менее предсказуемым.  
-Явный registry:
-
-- упрощает тестирование
-- убирает скрытые side effects
-- делает wiring прозрачнее
-
-**Альтернатива:**  
-оставить всё на `prometheus.DefaultRegisterer`.
-
-**Почему не выбрал:**  
-Изначаланьо так и написал, на этапе тестирования понял, что приходится делать костыли и нельзя удобно замокать, переписал.
-
-### 7. Graceful shutdown
-При остановке приложения корректно завершаются:
-
-- HTTP server
-- фоновая генерация слотов
-- Redis client
-- SQL DB для migrations
-- pgx pool
-
-### 8. Разделение тестов по слоям
-
-**Решение:**  
-используются:
-
-- unit tests для `domain`
-- unit tests для `usecase`
-- handler/middleware tests для HTTP
-- integration tests для PostgreSQL repositories
-- E2E tests
-
-**Мотивация:**  
-разные виды тестов проверяют разные риски:
-
-- unit tests быстро проверяют бизнес-логику
-- handler tests проверяют API-contract и error mapping
-- repository tests проверяют реальный SQL и mapping к домену
-- E2E проверяют сквозные сценарии
-
-**Почему не только unit tests:**  
-Можно было бы сделать только unit и e2e, но учитывая что мы много работаем с бд я посчитал, что важным будет реализовать тестирование на уровне репозитория.
-
-## Авторизация
-
-Реализованы:
-
-- `POST /dummyLogin`
-- `POST /register`
-- `POST /login`
-
-JWT содержит:
-
-- `sub` — идентификатор пользователя
-- `role`
-- `exp`
-
-## Graceful shutdown
-
-При завершении приложения:
-
-- останавливается HTTP server
-- отменяется фоновая задача генерации слотов
-- закрывается Redis client
-- закрывается SQL DB для `goose`
-- закрывается `pgxpool`
-
-## Метрики
-
-Prometheus metrics доступны по:
-
-- `GET /metrics`
-
-В проекте используется явный registry, а не неявная регистрация только в глобальном default registry.
-
-## Нагрузочное тестирование
-
-Для проекта подготовлен `k6`-сценарий для самого горячего эндпоинта:
-
-- `GET /rooms/{roomId}/slots/list?date=...`
-
-Скрипт находится в:
-
-- `load/k6_slots_list.js`
-
-### Почему тестируем именно этот эндпоинт
-
-В условии задания указано, что:
-
-- это самый высоконагруженный эндпоинт
-- основной ориентир по времени ответа относится именно к нему
-- ожидаемый SLI времени ответа — около `200ms`
-
-Поэтому нагрузочный тест был написан только для списка слотов.
-
-### Что делает сценарий
-
-Сценарий сам подготавливает тестовую среду:
-
-1. получает `admin` token через `dummyLogin`
-2. получает `user` token через `dummyLogin`
-3. создаёт переговорки
-4. создаёт расписания
-5. при необходимости наполняем cache
-6. запускает нагрузку на `GET /rooms/{roomId}/slots/list?date=...`
-
-### Запуск
-
-Нужен установленный `k6`.
+Two simultaneous inserts are exercised by
+`TestBookingRepo_ConcurrentCreateAllowsOnlyOneActiveBooking`: exactly one
+succeeds, the other maps PostgreSQL error `23505` to `ErrSlotAlreadyBooked`, and
+the final database count remains one. An application-level “check then insert”
+alone would leave a race window.
+
+## Stack
+
+- Go, Chi, pgx, goose
+- PostgreSQL 17 and Redis 7
+- RS256 JWT authentication and role-based middleware
+- Prometheus metrics
+- Testcontainers, Docker Compose, k6
+- React and Vite demo frontend
+
+## Configuration
+
+| Variable | Default in Compose | Purpose |
+| --- | --- | --- |
+| `HTTP_PORT` | `8080` | API listen port |
+| `HTTP_ALLOWED_ORIGINS` | local frontend origins | CORS allowlist |
+| `POSTGRES_DSN` | Compose PostgreSQL | Database connection |
+| `REDIS_ADDR` | `redis:6379` | Redis connection |
+| `JWT_PRIVATE_KEY_PATH` | `/app/secrets/private.pem` | RSA signing key |
+| `JWT_PUBLIC_KEY_PATH` | `/app/secrets/public.pem` | RSA verification key |
+| `JWT_TTL` | `24h` | Access-token lifetime |
+
+For a non-Docker local process, run `make keys`; generated PEM files are ignored.
+`POST /dummyLogin` is a development/demo endpoint and must not be exposed in a
+production deployment.
+
+## Tests and quality checks
 
 ```bash
-make load-slots
+make unit
+make integration  # Docker required
+make e2e          # Docker required
+make vet
+make lint
 ```
 
-Или напрямую:
+GitHub Actions runs the same layers independently so a failure identifies the
+affected boundary. The integration suite verifies SQL and error mapping against
+real PostgreSQL; E2E covers authentication, room setup, booking, duplicate
+booking rejection, cancellation, cache behavior, and metrics.
 
-```bash
-k6 run load/k6_slots_list.js
-```
+## Load-test result
 
-Полезные режимы:
+The checked-in k6 scenario targets
+`GET /rooms/{roomId}/slots/list?date=...`. Under the recorded local profile of
+20 virtual users (30 s ramp-up, 1 min plateau, 20 s ramp-down), it produced
+3,452 requests at about 31.16 requests/s with `p99 = 3.88 ms` and 0% request
+failures. This is a result for that exact environment and profile, not a general
+throughput claim. See the [full load-test report](docs/load-testing.md).
 
-```bash
-WARM_CACHE=false k6 run load/k6_slots_list.js
-WARM_CACHE=true k6 run load/k6_slots_list.js
-ROOM_COUNT=50 k6 run load/k6_slots_list.js
-BASE_URL=http://localhost:8080 k6 run load/k6_slots_list.js
-```
+## Documentation
 
-### Результаты тестирования
+- [Architecture and design decisions](docs/architecture.md)
+- [Load-test scenario and recorded results](docs/load-testing.md)
+- [OpenAPI specification](api.yaml)
+- [Development-key policy](secrets/README.md)
 
-Параметры:
+## Known trade-offs
 
-- профиль: `ramping-vus`
-- `20` VUs
-- `30s` разгон
-- `1m` плато
-- `20s` остановка
-- общий runtime: около `1m50s`
+- Cache coverage is intentionally narrow and invalidation is explicit.
+- Repository and E2E tests are slower because they start real dependencies.
+- The frontend is a local demonstration client rather than a deployed product.
+- `dummyLogin` exists only to make the portfolio scenario easy to reproduce.
 
-Итоговые метрики:
+## License
 
-- `http_req_duration avg = 1.36ms`
-- `p90 = 1.76ms`
-- `p95 = 2.23ms`
-- `p99 = 3.88ms`
-- `max = 17.31ms`
-- `http_reqs = 3452`
-- `RPS ≈ 31.16 req/s`
-- `iterations = 3390`
-- `http_req_failed = 0.00%`
-- `checks_total = 6864`
-- `checks_failed = 0`
-
-Thresholds:
-
-- `p95 < 200ms` — выполнен
-- `p99 < 400ms` — выполнен
-- `error rate < 1%` — выполнен
-
-### Анализ результатов
-
-По основному endpoint результат получился значительно лучше ориентира из задания:
-
-- `p95 = 2.23ms`, что на два порядка ниже целевого ориентира `200ms`
-- `p99 = 3.88ms`
-- error rate = `0%`
-
-Это говорит о том, что выбранная стратегия работает в правильную сторону:
-
-- предгенерация слотов снижает стоимость чтения
-- Redis cache делает запрос списка слотов очень дешёвым
-- hottest endpoint выдерживает нагрузку с большим запасом
-
-Подготовительная часть сценария также проходит корректно:
-
-- `dummyLogin admin status is 200`
-- `dummyLogin user status is 200`
-- `create room status is 201`
-- `create schedule status is 201`
-- `warm cache slots status is 200`
-- `slots list status is 200`
-- `slots list returns array`
-
-То есть в текущем состоянии сценарий проходит полностью чисто: без failed checks и без аномалий на этапе setup.
-
-### Вывод по нагрузочному тесту
-
-С точки зрения производительности основное требование задачи выполняется с большим запасом:
-
-- hottest endpoint стабильно укладывается в целевой latency
-- error rate равен нулю
-- сценарий подготовки данных тоже проходит без ошибок
-
-Итог: текущая реализация уверенно выдерживает выбранный профиль нагрузки для hottest endpoint и соответствует ожидаемому SLI по времени ответа.
-
-## Тесты
-
-Запуск backend-тестов:
-
-```bash
-GOCACHE=/tmp/gocache go test ./internal/... ./cmd/api/...
-```
-
-Запуск E2E:
-
-```bash
-GOCACHE=/tmp/gocache go test -tags=e2e ./e2e/...
-```
-
-Repository tests и E2E tests требуют Docker.
-
-## Покрытие
-
-Текущее суммарное покрытие:
-
-```text
-67.4%
-```
-
-Основные пакеты:
-
-- `internal/domain`: `93.5%`
-- `internal/usecase`: `89.2%`
-- `internal/transport/http/middleware`: `83.9%`
-- `internal/config`: `80.0%`
-- `internal/repository/pg`: `78.9%`
-- `internal/metrics`: `75.0%`
-- `internal/transport/http`: `59.3%`
-
-## Ограничения и trade-offs
-
-- кэш используется точечно, а не как универсальный слой для всего
-- repository integration tests медленнее unit tests, потому что используют Docker
-- frontend пока ориентирован на локальную разработку
-- не добавлена Swagger code generation
+[MIT](LICENSE)

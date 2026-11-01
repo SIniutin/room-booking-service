@@ -5,9 +5,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/internships-backend/test-backend-SIniutin/internal/cache"
-	"github.com/internships-backend/test-backend-SIniutin/internal/metrics"
-	"github.com/internships-backend/test-backend-SIniutin/internal/usecase"
+	"github.com/SIniutin/room-booking-service/internal/cache"
+	"github.com/SIniutin/room-booking-service/internal/metrics"
+	"github.com/SIniutin/room-booking-service/internal/usecase"
 )
 
 type Handler struct {

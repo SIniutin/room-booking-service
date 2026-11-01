@@ -5,9 +5,9 @@ import (
 	"errors"
 	"time"
 
+	d "github.com/SIniutin/room-booking-service/internal/domain"
+	r "github.com/SIniutin/room-booking-service/internal/repository"
 	"github.com/google/uuid"
-	d "github.com/internships-backend/test-backend-SIniutin/internal/domain"
-	r "github.com/internships-backend/test-backend-SIniutin/internal/repository"
 )
 
 type roomUsecaseImpl struct {

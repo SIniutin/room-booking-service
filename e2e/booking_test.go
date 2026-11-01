@@ -24,12 +24,12 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"go.uber.org/zap"
 
-	"github.com/internships-backend/test-backend-SIniutin/internal/cache"
-	"github.com/internships-backend/test-backend-SIniutin/internal/dto"
-	"github.com/internships-backend/test-backend-SIniutin/internal/metrics"
-	pgRepo "github.com/internships-backend/test-backend-SIniutin/internal/repository/pg"
-	transporthttp "github.com/internships-backend/test-backend-SIniutin/internal/transport/http"
-	"github.com/internships-backend/test-backend-SIniutin/internal/usecase"
+	"github.com/SIniutin/room-booking-service/internal/cache"
+	"github.com/SIniutin/room-booking-service/internal/dto"
+	"github.com/SIniutin/room-booking-service/internal/metrics"
+	pgRepo "github.com/SIniutin/room-booking-service/internal/repository/pg"
+	transporthttp "github.com/SIniutin/room-booking-service/internal/transport/http"
+	"github.com/SIniutin/room-booking-service/internal/usecase"
 )
 
 func isoWeekday(w time.Weekday) int {

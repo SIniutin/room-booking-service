@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/SIniutin/room-booking-service/internal/cache"
+	d "github.com/SIniutin/room-booking-service/internal/domain"
+	r "github.com/SIniutin/room-booking-service/internal/repository"
 	"github.com/google/uuid"
-	"github.com/internships-backend/test-backend-SIniutin/internal/cache"
-	d "github.com/internships-backend/test-backend-SIniutin/internal/domain"
-	r "github.com/internships-backend/test-backend-SIniutin/internal/repository"
 )
 
 type bookingUsecaseImpl struct {

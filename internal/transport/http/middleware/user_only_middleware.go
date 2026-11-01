@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/internships-backend/test-backend-SIniutin/internal/domain"
+	"github.com/SIniutin/room-booking-service/internal/domain"
 )
 
 func UserOnlyMiddleware(next http.Handler) http.Handler {

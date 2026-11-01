@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/internships-backend/test-backend-SIniutin/internal/cache"
+	"github.com/SIniutin/room-booking-service/internal/cache"
 )
 
 func CacheMiddleware(c cache.Cache, ttl time.Duration) func(http.Handler) http.Handler {

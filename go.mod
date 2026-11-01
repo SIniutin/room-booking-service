@@ -1,4 +1,4 @@
-module github.com/internships-backend/test-backend-SIniutin
+module github.com/SIniutin/room-booking-service
 
 go 1.25.0
 

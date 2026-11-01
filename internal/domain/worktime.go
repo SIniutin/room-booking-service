@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	ErrEmptyWorkTime        = errors.New("work time is empty")
+	ErrEmptyWorkTime         = errors.New("work time is empty")
 	ErrInvalidWorkTimeFormat = errors.New("work time must be in HH:MM format")
 )
 

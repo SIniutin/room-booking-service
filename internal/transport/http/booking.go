@@ -10,9 +10,9 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	d "github.com/internships-backend/test-backend-SIniutin/internal/domain"
-	"github.com/internships-backend/test-backend-SIniutin/internal/dto"
-	m "github.com/internships-backend/test-backend-SIniutin/internal/transport/http/middleware"
+	d "github.com/SIniutin/room-booking-service/internal/domain"
+	"github.com/SIniutin/room-booking-service/internal/dto"
+	m "github.com/SIniutin/room-booking-service/internal/transport/http/middleware"
 )
 
 func (h *Handler) createBooking(w http.ResponseWriter, r *http.Request) {
